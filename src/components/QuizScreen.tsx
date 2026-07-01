@@ -7,11 +7,13 @@ import { QUIZ_QUESTIONS, INGREDIENTS } from '../data/gameData';
 interface QuizScreenProps {
   ingredientIds: string[];
   onQuizComplete: (answers: { ingredientId: string; isCorrect: boolean; score: number }[]) => void;
+  difficulty?: 'easy' | 'hard';
 }
 
-export default function QuizScreen({ ingredientIds, onQuizComplete }: QuizScreenProps) {
+export default function QuizScreen({ ingredientIds, onQuizComplete, difficulty = 'easy' }: QuizScreenProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(60);
+  const initialTime = difficulty === 'hard' ? 30 : 60;
+  const [timeLeft, setTimeLeft] = useState(initialTime);
   const [selectedOptionIndex, setSelectedOptionIndex] = useState<number | null>(null);
   const [isAnswered, setIsAnswered] = useState(false);
   const [results, setResults] = useState<{ ingredientId: string; isCorrect: boolean; score: number }[]>([]);
@@ -53,7 +55,12 @@ export default function QuizScreen({ ingredientIds, onQuizComplete }: QuizScreen
     };
   };
 
-  const currentQuestion = getQuestion(currentIngredientId);
+  const baseQuestion = getQuestion(currentIngredientId);
+  const currentQuestion: QuizQuestion = {
+    ...baseQuestion,
+    question: (difficulty === 'hard' && baseQuestion.hardQuestion) ? baseQuestion.hardQuestion : baseQuestion.question,
+    options: (difficulty === 'hard' && baseQuestion.hardOptions) ? baseQuestion.hardOptions : baseQuestion.options,
+  };
 
   // シャッフルされた選択肢を問題ごとに保持する
   const [shuffledOptions, setShuffledOptions] = useState<typeof currentQuestion.options>([]);
@@ -66,7 +73,7 @@ export default function QuizScreen({ ingredientIds, onQuizComplete }: QuizScreen
     setShuffledOptions(shuffled);
     
     // タイマー初期化
-    setTimeLeft(60);
+    setTimeLeft(initialTime);
     setSelectedOptionIndex(null);
     setIsAnswered(false);
   }, [currentIndex, currentIngredientId]);
@@ -145,7 +152,7 @@ export default function QuizScreen({ ingredientIds, onQuizComplete }: QuizScreen
       <div className="w-full h-1.5 bg-stone-100 rounded-full overflow-hidden mb-6">
         <div
           className={`h-full transition-all duration-1000 ${timeLeft <= 10 ? 'bg-red-500' : 'bg-emerald-500'}`}
-          style={{ width: `${(timeLeft / 60) * 100}%` }}
+          style={{ width: `${(timeLeft / initialTime) * 100}%` }}
         />
       </div>
 
@@ -168,6 +175,7 @@ export default function QuizScreen({ ingredientIds, onQuizComplete }: QuizScreen
           const isSelected = selectedOptionIndex === idx;
           const showSuccess = isAnswered && option.isCorrect;
           const showFailure = isAnswered && isSelected && !option.isCorrect;
+          const isHardImageOnly = difficulty === 'hard' && !!option.imagePath;
 
           return (
             <button
@@ -197,25 +205,29 @@ export default function QuizScreen({ ingredientIds, onQuizComplete }: QuizScreen
               )}
 
               {/* Eye-catching badge representing "Observing state" */}
-              <div className="flex items-start gap-3">
-                <div className={`mt-0.5 p-1 rounded-lg ${showSuccess ? 'bg-emerald-100 text-emerald-600' : showFailure ? 'bg-red-100 text-red-600' : 'bg-stone-100 text-stone-500'}`}>
-                  <Eye size={16} />
-                </div>
-                <div>
-                  <div className="text-stone-400 text-xs font-semibold flex items-center gap-1">
-                    <span>パック／トレイの写真（状態）：</span>
+              {!isHardImageOnly && (
+                <div className="flex items-start gap-3">
+                  <div className={`mt-0.5 p-1 rounded-lg ${showSuccess ? 'bg-emerald-100 text-emerald-600' : showFailure ? 'bg-red-100 text-red-600' : 'bg-stone-100 text-stone-500'}`}>
+                    <Eye size={16} />
                   </div>
-                  <p className="text-stone-500 text-xs italic font-medium mt-0.5">
-                    「{option.imageDesc}」
+                  <div>
+                    <div className="text-stone-400 text-xs font-semibold flex items-center gap-1">
+                      <span>パック／トレイの写真（状態）：</span>
+                    </div>
+                    <p className="text-stone-500 text-xs italic font-medium mt-0.5">
+                      「{option.imageDesc}」
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {!isHardImageOnly && (
+                <div className="border-t border-stone-100 pt-2 mt-1">
+                  <p className="text-stone-800 font-medium text-sm leading-relaxed">
+                    {option.text}
                   </p>
                 </div>
-              </div>
-
-              <div className="border-t border-stone-100 pt-2 mt-1">
-                <p className="text-stone-800 font-medium text-sm leading-relaxed">
-                  {option.text}
-                </p>
-              </div>
+              )}
 
               {/* Correct/Incorrect Mark */}
               {isAnswered && (

@@ -5,12 +5,13 @@ import { Recipe, Ingredient } from '../types';
 import { RECIPES, INGREDIENTS } from '../data/gameData';
 
 interface RecipeSelectScreenProps {
-  onStartCooking: (recipe: Recipe, selectedIngredients: string[]) => void;
+  onStartCooking: (recipe: Recipe, selectedIngredients: string[], difficulty: 'easy' | 'hard') => void;
 }
 
 export default function RecipeSelectScreen({ onStartCooking }: RecipeSelectScreenProps) {
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
+  const [difficulty, setDifficulty] = useState<'easy' | 'hard'>('easy');
 
   // レシピ選択時の処理
   const handleSelectRecipe = (recipe: Recipe) => {
@@ -40,7 +41,7 @@ export default function RecipeSelectScreen({ onStartCooking }: RecipeSelectScree
   // 目利きクイズ開始
   const handleStart = () => {
     if (!selectedRecipe) return;
-    onStartCooking(selectedRecipe, selectedIngredients);
+    onStartCooking(selectedRecipe, selectedIngredients, difficulty);
   };
 
   // レシピのグループ化（カテゴリ別）
@@ -171,10 +172,43 @@ export default function RecipeSelectScreen({ onStartCooking }: RecipeSelectScree
                   </div>
 
                   {/* Summary / Game Start Button */}
-                  <div className="border-t border-stone-200 pt-4 space-y-3">
+                  <div className="border-t border-stone-200 pt-4 space-y-4">
                     <div className="flex justify-between items-center text-xs text-stone-500">
                       <span>クイズ総出題数</span>
                       <span className="font-bold text-stone-800">{selectedIngredients.length} 問</span>
+                    </div>
+
+                    {/* 難易度選択項目 */}
+                    <div className="space-y-2">
+                      <label className="text-xs font-semibold text-stone-500 block">
+                        難易度を選択
+                      </label>
+                      <div className="grid grid-cols-2 gap-2 bg-stone-100 p-1 rounded-xl">
+                        <button
+                          type="button"
+                          id="diff-easy-btn"
+                          onClick={() => setDifficulty('easy')}
+                          className={`py-1.5 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer text-center ${
+                            difficulty === 'easy'
+                              ? 'bg-white text-stone-800 shadow-xs'
+                              : 'text-stone-400 hover:text-stone-600'
+                          }`}
+                        >
+                          簡単（標準）
+                        </button>
+                        <button
+                          type="button"
+                          id="diff-hard-btn"
+                          onClick={() => setDifficulty('hard')}
+                          className={`py-1.5 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer text-center ${
+                            difficulty === 'hard'
+                              ? 'bg-red-500 text-white shadow-xs'
+                              : 'text-stone-400 hover:text-red-500'
+                          }`}
+                        >
+                          難しい（30秒）
+                        </button>
+                      </div>
                     </div>
 
                     <button

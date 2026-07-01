@@ -18,6 +18,7 @@ export default function App() {
   const [gameState, setGameState] = useState<'select' | 'quiz' | 'result'>('select');
   const [currentRecipe, setCurrentRecipe] = useState<Recipe | null>(null);
   const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
+  const [difficulty, setDifficulty] = useState<'easy' | 'hard'>('easy');
   const [quizAnswers, setQuizAnswers] = useState<{ ingredientId: string; isCorrect: boolean; score: number }[]>([]);
 
   // 起動時のローカルストレージ読み込み
@@ -63,9 +64,10 @@ export default function App() {
   };
 
   // 料理の開始
-  const handleStartCooking = (recipe: Recipe, ingredients: string[]) => {
+  const handleStartCooking = (recipe: Recipe, ingredients: string[], diff: 'easy' | 'hard') => {
     setCurrentRecipe(recipe);
     setSelectedIngredients(ingredients);
+    setDifficulty(diff);
     setQuizAnswers([]);
     setGameState('quiz');
   };
@@ -141,6 +143,7 @@ export default function App() {
               <QuizScreen
                 ingredientIds={selectedIngredients}
                 onQuizComplete={handleQuizComplete}
+                difficulty={difficulty}
               />
             )}
             {gameState === 'result' && currentRecipe && (

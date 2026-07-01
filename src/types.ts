@@ -13,6 +13,8 @@ export interface Recipe {
   excludedIngredients: string[]; // Ingredient IDs that MUST NOT appear
 }
 
+export type Difficulty = 'easy' | 'hard';
+
 export interface QuizQuestion {
   ingredientId: string;
   ingredientName: string;
@@ -24,6 +26,13 @@ export interface QuizQuestion {
     isCorrect: boolean;
   }[];
   explanation: string;
+  hardQuestion?: string;
+  hardOptions?: {
+    text: string;
+    imageDesc: string;
+    imagePath?: string;
+    isCorrect: boolean;
+  }[];
 }
 
 export interface Dish {
