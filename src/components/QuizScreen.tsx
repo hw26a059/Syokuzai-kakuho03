@@ -185,6 +185,17 @@ export default function QuizScreen({ ingredientIds, onQuizComplete }: QuizScreen
                   : 'border-stone-200 bg-white hover:border-stone-300 hover:bg-stone-50 cursor-pointer'
               }`}
             >
+              {option.imagePath && (
+                <div className="w-full h-40 rounded-lg overflow-hidden bg-stone-100 border border-stone-200 mb-2">
+                  <img
+                    src={option.imagePath}
+                    alt={option.imageDesc}
+                    className="w-full h-full object-contain bg-white"
+                    referrerPolicy="no-referrer"
+                  />
+                </div>
+              )}
+
               {/* Eye-catching badge representing "Observing state" */}
               <div className="flex items-start gap-3">
                 <div className={`mt-0.5 p-1 rounded-lg ${showSuccess ? 'bg-emerald-100 text-emerald-600' : showFailure ? 'bg-red-100 text-red-600' : 'bg-stone-100 text-stone-500'}`}>

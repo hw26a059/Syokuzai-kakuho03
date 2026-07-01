@@ -223,16 +223,13 @@ export const QUIZ_QUESTIONS: Record<string, QuizQuestion> = {
       {
         text: '肉質がみずみずしい淡いピンク色（淡紅色）で、脂肪の部分が白く硬く締まっていて、ドリップがないもの。',
         imageDesc: '綺麗な薄ピンク色の肉に、真っ白でくっきりした脂身があり、パック内が綺麗な状態。',
+        imagePath: '/image-pig_sinnsenn.png',
         isCorrect: true
       },
       {
         text: '肉の色が少し濁った灰色がかったピンク色で、トレイの端に水滴や赤い水分がにじんでいるもの。',
         imageDesc: 'やや灰色を帯びたピンク色で、パックの底に水滴とドリップがたまっている豚肉。',
-        isCorrect: false
-      },
-      {
-        text: '脂肪の部分が黄色っぽく変色しており、全体的にべちゃっとした柔らかい見た目のもの。',
-        imageDesc: '脂身の境界線がぼやけて黄色みを帯び、肉全体がダレてツヤのない状態。',
+        imagePath: '/image-pig_old.png',
         isCorrect: false
       }
     ],
@@ -246,16 +243,13 @@ export const QUIZ_QUESTIONS: Record<string, QuizQuestion> = {
       {
         text: '肉全体が透明感のある鮮やかなピンク色で、皮の毛穴が盛り上がって細かく縮れており、ドリップがないもの。',
         imageDesc: 'ツヤツヤした明るいピンク色の肉に、表面に細かいブツブツ（毛穴）がしっかり立った皮がついている状態。',
+        imagePath: '/image_chicken_sinnsenn.png',
         isCorrect: true
       },
       {
-        text: '肉の色が白っぽく退色しており、パックの底にピンク色の汁が溜まっているもの。',
+        text: '肉の色が白っぽく退色しており、パック的底にピンク色の汁が溜まっているもの。',
         imageDesc: '全体的に色が抜けて白っぽく、底にピンクのドリップが溜まっているもも肉。',
-        isCorrect: false
-      },
-      {
-        text: '皮の表面が平坦でテカテカと水っぽく、肉の端がやや茶褐色に変色しているもの。',
-        imageDesc: '毛穴の凹凸がなくツルンとしており、肉の縁が乾燥して茶色っぽくなっている鶏肉。',
+        imagePath: '/image_chicken_Yellow.png',
         isCorrect: false
       }
     ],

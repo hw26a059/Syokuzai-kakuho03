@@ -20,6 +20,7 @@ export interface QuizQuestion {
   options: {
     text: string;
     imageDesc: string; // Description of the image
+    imagePath?: string; // Path to the image
     isCorrect: boolean;
   }[];
   explanation: string;
