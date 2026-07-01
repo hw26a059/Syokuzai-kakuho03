@@ -1,0 +1,6 @@
+{
+  "name": "食材目利きゲーム仕様書",
+  "description": "お肉や魚、野菜の目利きを題材とした、手軽に食材の知識と料理が学べるクイズゲームの仕様書",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
