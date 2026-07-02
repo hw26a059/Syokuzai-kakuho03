@@ -20,6 +20,7 @@ export default function App() {
   const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
   const [difficulty, setDifficulty] = useState<'easy' | 'hard'>('easy');
   const [quizAnswers, setQuizAnswers] = useState<{ ingredientId: string; isCorrect: boolean; score: number }[]>([]);
+  const [isSaved, setIsSaved] = useState<boolean>(false);
 
   // 起動時のローカルストレージ読み込み
   useEffect(() => {
@@ -69,6 +70,7 @@ export default function App() {
     setSelectedIngredients(ingredients);
     setDifficulty(diff);
     setQuizAnswers([]);
+    setIsSaved(false);
     setGameState('quiz');
   };
 
@@ -87,6 +89,7 @@ export default function App() {
     const newScore = totalScore + addedScore;
     setTotalScore(newScore);
     localStorage.setItem('syokuzai_total_score', newScore.toString());
+    setIsSaved(true);
 
     // サーバーに累計スコアを送信
     if (nickname) {
@@ -107,6 +110,7 @@ export default function App() {
     setCurrentRecipe(null);
     setSelectedIngredients([]);
     setQuizAnswers([]);
+    setIsSaved(false);
     setGameState('select');
     setTab('game');
   };
@@ -155,6 +159,7 @@ export default function App() {
                 onSaveDish={handleSaveDish}
                 onRestart={handleRestart}
                 onViewBook={handleViewBook}
+                isSaved={isSaved}
               />
             )}
           </>

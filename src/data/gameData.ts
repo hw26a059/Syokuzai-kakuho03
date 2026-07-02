@@ -177,16 +177,16 @@ export const RECIPES: Recipe[] = [
     id: 'mabotofu',
     name: '麻婆豆腐',
     baseCategory: '中華',
-    requiredIngredients: ['butahikiku', 'tofu', 'nagaranege'],
-    optionalIngredients: ['torihikiku'],
+    requiredIngredients: ['torihikiku', 'tofu', 'nagaranege'],
+    optionalIngredients: ['butahikiku'],
     excludedIngredients: ['saba', 'satoimo', 'shirataki', 'konnyaku', 'aburaage', 'shijimi']
   },
   {
     id: 'mabonasu',
     name: '麻婆茄子',
     baseCategory: '中華',
-    requiredIngredients: ['butahikiku', 'nasu', 'piman'],
-    optionalIngredients: ['torihikiku', 'nagaranege'],
+    requiredIngredients: ['torihikiku', 'nasu', 'piman'],
+    optionalIngredients: ['butahikiku', 'nagaranege'],
     excludedIngredients: ['saba', 'satoimo', 'shirataki', 'konnyaku', 'aburaage', 'shijimi']
   }
 ];
@@ -277,6 +277,49 @@ export const QUIZ_QUESTIONS: Record<string, QuizQuestion> = {
       }
     ],
     explanation: '鶏肉は水分が多いため傷みやすく、ドリップが最も出やすい肉です。新鮮なものは「透明感のあるピンク色」で、皮の毛穴がしっかり盛り上がってシワが寄っています。毛穴のブツブツがはっきりしているのは鮮度が良い証拠です。白っぽくダレてドリップが出ているものは鮮度が落ちています。'
+  },
+  torihikiku: {
+    ingredientId: 'torihikiku',
+    ingredientName: '鶏挽き肉',
+    question: 'パックに入った鶏挽き肉を目利きします。最も新鮮で、料理が美味しく仕上がる状態のものはどれ？',
+    options: [
+      {
+        text: '全体が透明感のある明るいピンク色（淡い赤色）で、ひき肉一粒一粒の輪郭がはっきりしており、ドリップがないもの。',
+        imageDesc: '全体が綺麗な淡いピンク色で、粒が潰れずしっかり立ち、ドリップがない鶏挽き肉。',
+        imagePath: '/image_chicken_hikiniku_sinnsen.png',
+        isCorrect: true
+      },
+      {
+        text: '全体的に白っぽく退色しており、パックの底にピンク色や黄色みを帯びた水分（ドリップ）がたまっているもの。',
+        imageDesc: '白っぽくダレており、トレイの底に黄色みを帯びたドリップが溜まっている鶏挽き肉。',
+        imagePath: '/image_chicken_hikiniku_Yellow.png',
+        isCorrect: false
+      }
+    ],
+    explanation: '鶏挽き肉は水分が多くて非常に傷みやすいため、パックの底に「ドリップ（水分）」が出ていないことが大前提です。新鮮なものは透明感のある「明るいピンク色」をしています。鮮度が落ちると全体的に白っぽく濁り、粒の輪郭が潰れてドロッとした状態になります。',
+    hardQuestion: 'パック入りの鶏挽き肉を究極に目利きします。最も雑菌の繁殖が少なく、旨味と鮮度が最高峰のパックはどれ？',
+    hardOptions: [
+      {
+        text: 'パックを傾けてもドリップが全く動かず、肉の表面に不自然なテカリがなく、ひき肉の繊維（一粒一粒の切り口）がしっかりとシャープに立っているもの。',
+        imageDesc: 'ドリップが一切なく、一粒一粒の繊維がシャープに立っている鶏挽き肉。',
+        isCorrect: true
+      },
+      {
+        text: 'パックの底全体に極わずかに白濁したドリップが溜まっているが、肉自体は非常に明るい純白色をしているもの。',
+        imageDesc: '底にうっすら白濁した汁があり、全体が不自然な純白色の鶏挽き肉。',
+        isCorrect: false
+      },
+      {
+        text: '表面が非常に滑らかで、全体が粘土のように均一なペースト状になっており、油分が表面を膜のように覆っているもの。',
+        imageDesc: '粒が完全に潰れてペースト状になり、表面に油浮きがある鶏挽き肉。',
+        isCorrect: false
+      },
+      {
+        text: '全体が非常に濃い赤色（濃紅色）をしており、パックのふちに薄い結露が生じているもの。',
+        imageDesc: '色が極端に赤く、ふちに結露が出ている鶏挽き肉。',
+        isCorrect: false
+      }
+    ]
   },
   saba: {
     ingredientId: 'saba',

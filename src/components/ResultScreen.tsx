@@ -12,6 +12,7 @@ interface ResultScreenProps {
   onSaveDish: (dish: Dish, addedScore: number) => void;
   onRestart: () => void;
   onViewBook: () => void;
+  isSaved: boolean;
 }
 
 export default function ResultScreen({
@@ -21,11 +22,11 @@ export default function ResultScreen({
   nickname,
   onSaveDish,
   onRestart,
-  onViewBook
+  onViewBook,
+  isSaved
 }: ResultScreenProps) {
   const [cookingPhase, setCookingPhase] = useState<'chopping' | 'boiling' | 'completed'>('chopping');
   const [customName, setCustomName] = useState('');
-  const [isSaved, setIsSaved] = useState(false);
 
   // 正解数と合計スコアの計算
   const correctCount = answers.filter((a) => a.isCorrect).length;
@@ -72,7 +73,6 @@ export default function ResultScreen({
     };
 
     onSaveDish(newDish, totalEarnedScore);
-    setIsSaved(true);
   };
 
   if (cookingPhase !== 'completed') {
