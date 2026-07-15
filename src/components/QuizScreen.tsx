@@ -64,6 +64,7 @@ export default function QuizScreen({ ingredientIds, onQuizComplete, difficulty =
 
   // シャッフルされた選択肢を問題ごとに保持する
   const [shuffledOptions, setShuffledOptions] = useState<typeof currentQuestion.options>([]);
+  const [tempSelectedIdx, setTempSelectedIdx] = useState<number | null>(null);
 
   useEffect(() => {
     // 選択肢のシャッフル（問題が変わるたびに実行）
@@ -75,35 +76,12 @@ export default function QuizScreen({ ingredientIds, onQuizComplete, difficulty =
     // タイマー初期化
     setTimeLeft(initialTime);
     setSelectedOptionIndex(null);
+    setTempSelectedIdx(null);
     setIsAnswered(false);
   }, [currentIndex, currentIngredientId]);
 
-  // タイマー処理
-  useEffect(() => {
-    if (isAnswered) {
-      if (timerRef.current) clearInterval(timerRef.current);
-      return;
-    }
-
-    timerRef.current = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          if (timerRef.current) clearInterval(timerRef.current);
-          // 時間切れ
-          handleAnswerSelect(-1); // 特別なインデックス
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [isAnswered, currentIndex]);
-
-  // 回答選択
-  const handleAnswerSelect = (optionIndex: number) => {
+  // 回答選択の確定
+  const confirmAnswer = (optionIndex: number) => {
     if (isAnswered) return;
 
     setSelectedOptionIndex(optionIndex);
@@ -123,6 +101,41 @@ export default function QuizScreen({ ingredientIds, onQuizComplete, difficulty =
     ]);
   };
 
+  // タイマー処理
+  useEffect(() => {
+    if (isAnswered) {
+      if (timerRef.current) clearInterval(timerRef.current);
+      return;
+    }
+
+    timerRef.current = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          if (timerRef.current) clearInterval(timerRef.current);
+          // 時間切れ
+          confirmAnswer(-1); // 直接時間切れで回答確定
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [isAnswered, currentIndex, shuffledOptions]);
+
+  // 回答クリック（1回目は選択、2回目は確定）
+  const handleOptionClick = (optionIndex: number) => {
+    if (isAnswered) return;
+
+    if (tempSelectedIdx === optionIndex) {
+      confirmAnswer(optionIndex);
+    } else {
+      setTempSelectedIdx(optionIndex);
+    }
+  };
+
   // 次へ進む
   const handleNext = () => {
     if (currentIndex < ingredientIds.length - 1) {
@@ -135,25 +148,27 @@ export default function QuizScreen({ ingredientIds, onQuizComplete, difficulty =
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
-      {/* Quiz Progress */}
-      <div className="flex justify-between items-center mb-4">
-        <span className="text-xs font-bold text-stone-400 uppercase tracking-wider">
-          食材確保クイズ ({currentIndex + 1} / {ingredientIds.length})
-        </span>
-        <div className="flex items-center gap-2 bg-stone-100 px-3 py-1.5 rounded-xl">
-          <Timer size={14} className={timeLeft <= 10 ? 'text-red-500 animate-bounce' : 'text-stone-500'} />
-          <span className={`text-sm font-bold font-mono ${timeLeft <= 10 ? 'text-red-500 font-extrabold' : 'text-stone-700'}`}>
-            {timeLeft}s
+      {/* Sticky Progress & Timer Bar */}
+      <div className="sticky top-0 z-50 bg-white/95 backdrop-blur-md -mx-4 px-4 py-3 border-b border-stone-200 mb-6 shadow-sm">
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-xs font-bold text-stone-500 uppercase tracking-wider">
+            食材確保クイズ ({currentIndex + 1} / {ingredientIds.length})
           </span>
+          <div className="flex items-center gap-2 bg-stone-100 px-3 py-1.5 rounded-xl">
+            <Timer size={14} className={timeLeft <= 10 ? 'text-red-500 animate-bounce' : 'text-stone-500'} />
+            <span className={`text-sm font-bold font-mono ${timeLeft <= 10 ? 'text-red-500 font-extrabold' : 'text-stone-700'}`}>
+              {timeLeft}s
+            </span>
+          </div>
         </div>
-      </div>
 
-      {/* Timer Bar */}
-      <div className="w-full h-1.5 bg-stone-100 rounded-full overflow-hidden mb-6">
-        <div
-          className={`h-full transition-all duration-1000 ${timeLeft <= 10 ? 'bg-red-500' : 'bg-emerald-500'}`}
-          style={{ width: `${(timeLeft / initialTime) * 100}%` }}
-        />
+        {/* Timer Bar */}
+        <div className="w-full h-1.5 bg-stone-100 rounded-full overflow-hidden">
+          <div
+            className={`h-full transition-all duration-1000 ${timeLeft <= 10 ? 'bg-red-500' : 'bg-emerald-500'}`}
+            style={{ width: `${(timeLeft / initialTime) * 100}%` }}
+          />
+        </div>
       </div>
 
       {/* Ingredient Spotlight */}
@@ -169,19 +184,20 @@ export default function QuizScreen({ ingredientIds, onQuizComplete, difficulty =
         </p>
       </div>
 
-      {/* 3 Choices */}
+      {/* Choices */}
       <div className="space-y-4 mb-6">
         {shuffledOptions.map((option, idx) => {
           const isSelected = selectedOptionIndex === idx;
+          const isTempSelected = tempSelectedIdx === idx;
           const showSuccess = isAnswered && option.isCorrect;
           const showFailure = isAnswered && isSelected && !option.isCorrect;
-          const isHardImageOnly = difficulty === 'hard' && !!option.imagePath;
+          const isHard = difficulty === 'hard';
 
           return (
             <button
               key={idx}
               id={`quiz-option-${idx}`}
-              onClick={() => handleAnswerSelect(idx)}
+              onClick={() => handleOptionClick(idx)}
               disabled={isAnswered}
               className={`w-full text-left p-4 rounded-xl border transition-all flex flex-col gap-2 relative ${
                 isAnswered
@@ -190,10 +206,12 @@ export default function QuizScreen({ ingredientIds, onQuizComplete, difficulty =
                     : isSelected
                     ? 'border-red-500 bg-red-50/50'
                     : 'border-stone-150 bg-white opacity-60'
+                  : isTempSelected
+                  ? 'border-emerald-500 bg-emerald-50/20 shadow-sm ring-2 ring-emerald-500/40'
                   : 'border-stone-200 bg-white hover:border-stone-300 hover:bg-stone-50 cursor-pointer'
               }`}
             >
-              {option.imagePath && (
+              {option.imagePath && !isHard && (
                 <div className="w-full h-40 rounded-lg overflow-hidden bg-stone-100 border border-stone-200 mb-2">
                   <img
                     src={option.imagePath}
@@ -205,7 +223,7 @@ export default function QuizScreen({ ingredientIds, onQuizComplete, difficulty =
               )}
 
               {/* Eye-catching badge representing "Observing state" */}
-              {!isHardImageOnly && (
+              {!isHard && option.imageDesc && (
                 <div className="flex items-start gap-3">
                   <div className={`mt-0.5 p-1 rounded-lg ${showSuccess ? 'bg-emerald-100 text-emerald-600' : showFailure ? 'bg-red-100 text-red-600' : 'bg-stone-100 text-stone-500'}`}>
                     <Eye size={16} />
@@ -221,12 +239,17 @@ export default function QuizScreen({ ingredientIds, onQuizComplete, difficulty =
                 </div>
               )}
 
-              {!isHardImageOnly && (
-                <div className="border-t border-stone-100 pt-2 mt-1">
-                  <p className="text-stone-800 font-medium text-sm leading-relaxed">
-                    {option.text}
-                  </p>
-                </div>
+              <div className={!isHard && option.imageDesc ? 'border-t border-stone-100 pt-2 mt-1' : ''}>
+                <p className="text-stone-800 font-medium text-sm leading-relaxed">
+                  {option.text}
+                </p>
+              </div>
+
+              {/* Selection info or correctness marks */}
+              {!isAnswered && isTempSelected && (
+                <span className="absolute top-4 right-4 text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full animate-pulse">
+                  選択中（もう一度押して確定）
+                </span>
               )}
 
               {/* Correct/Incorrect Mark */}
@@ -242,6 +265,27 @@ export default function QuizScreen({ ingredientIds, onQuizComplete, difficulty =
             </button>
           );
         })}
+
+        {/* Confirm Button for 2-step answering */}
+        {!isAnswered && tempSelectedIdx !== null && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="pt-2"
+          >
+            <button
+              id="confirm-answer-btn"
+              onClick={() => confirmAnswer(tempSelectedIdx)}
+              className="w-full bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-md shadow-emerald-500/10 flex items-center justify-center gap-2 cursor-pointer text-center"
+            >
+              <span>この選択肢で解答を決定する</span>
+              <CheckCircle size={18} />
+            </button>
+            <p className="text-center text-xs text-stone-400 mt-2">
+              ※選択した選択肢をもう一度クリックすることでも解答できます。
+            </p>
+          </motion.div>
+        )}
 
         {/* Time-out Indicator */}
         {isAnswered && selectedOptionIndex === -1 && (

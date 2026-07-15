@@ -21,7 +21,7 @@ export interface QuizQuestion {
   question: string;
   options: {
     text: string;
-    imageDesc: string; // Description of the image
+    imageDesc?: string; // Description of the image
     imagePath?: string; // Path to the image
     isCorrect: boolean;
   }[];
@@ -29,7 +29,7 @@ export interface QuizQuestion {
   hardQuestion?: string;
   hardOptions?: {
     text: string;
-    imageDesc: string;
+    imageDesc?: string;
     imagePath?: string;
     isCorrect: boolean;
   }[];
