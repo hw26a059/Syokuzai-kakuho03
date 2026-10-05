@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Timer, ArrowRight, CheckCircle, XCircle, Eye } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ArrowRight, CheckCircle, XCircle, Eye } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { QuizQuestion, Ingredient } from '../types';
+import { QuizQuestion } from '../types';
 import { QUIZ_QUESTIONS, INGREDIENTS } from '../data/gameData';
 
 interface QuizScreenProps {
@@ -12,13 +12,9 @@ interface QuizScreenProps {
 
 export default function QuizScreen({ ingredientIds, onQuizComplete, difficulty = 'easy' }: QuizScreenProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const initialTime = difficulty === 'hard' ? 30 : 60;
-  const [timeLeft, setTimeLeft] = useState(initialTime);
   const [selectedOptionIndex, setSelectedOptionIndex] = useState<number | null>(null);
   const [isAnswered, setIsAnswered] = useState(false);
   const [results, setResults] = useState<{ ingredientId: string; isCorrect: boolean; score: number }[]>([]);
-
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const currentIngredientId = ingredientIds[currentIndex];
   const ingredient = INGREDIENTS[currentIngredientId];
@@ -73,8 +69,6 @@ export default function QuizScreen({ ingredientIds, onQuizComplete, difficulty =
     const shuffled = options.sort(() => Math.random() - 0.5);
     setShuffledOptions(shuffled);
     
-    // タイマー初期化
-    setTimeLeft(initialTime);
     setSelectedOptionIndex(null);
     setTempSelectedIdx(null);
     setIsAnswered(false);
@@ -88,42 +82,16 @@ export default function QuizScreen({ ingredientIds, onQuizComplete, difficulty =
     setIsAnswered(true);
 
     const isCorrect = optionIndex !== -1 && shuffledOptions[optionIndex]?.isCorrect;
-    // スコア計算：正解なら残り秒数 * 10 + 基本点100点
-    const score = isCorrect ? 100 + timeLeft * 10 : 0;
 
     setResults((prev) => [
       ...prev,
       {
         ingredientId: currentIngredientId,
         isCorrect,
-        score
+        score: isCorrect ? 1 : 0
       }
     ]);
   };
-
-  // タイマー処理
-  useEffect(() => {
-    if (isAnswered) {
-      if (timerRef.current) clearInterval(timerRef.current);
-      return;
-    }
-
-    timerRef.current = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          if (timerRef.current) clearInterval(timerRef.current);
-          // 時間切れ
-          confirmAnswer(-1); // 直接時間切れで回答確定
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [isAnswered, currentIndex, shuffledOptions]);
 
   // 回答クリック（1回目は選択、2回目は確定）
   const handleOptionClick = (optionIndex: number) => {
@@ -146,27 +114,26 @@ export default function QuizScreen({ ingredientIds, onQuizComplete, difficulty =
     }
   };
 
+  const progressPercent = ((currentIndex + (isAnswered ? 1 : 0)) / ingredientIds.length) * 100;
+
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
-      {/* Sticky Progress & Timer Bar */}
+      {/* Sticky Progress Bar */}
       <div className="sticky top-0 z-50 bg-white/95 backdrop-blur-md -mx-4 px-4 py-3 border-b border-stone-200 mb-6 shadow-sm">
         <div className="flex justify-between items-center mb-2">
           <span className="text-xs font-bold text-stone-500 uppercase tracking-wider">
             食材確保クイズ ({currentIndex + 1} / {ingredientIds.length})
           </span>
-          <div className="flex items-center gap-2 bg-stone-100 px-3 py-1.5 rounded-xl">
-            <Timer size={14} className={timeLeft <= 10 ? 'text-red-500 animate-bounce' : 'text-stone-500'} />
-            <span className={`text-sm font-bold font-mono ${timeLeft <= 10 ? 'text-red-500 font-extrabold' : 'text-stone-700'}`}>
-              {timeLeft}s
-            </span>
-          </div>
+          <span className="text-xs font-semibold text-stone-400">
+            {difficulty === 'hard' ? '難易度：難しい' : '難易度：簡単'}
+          </span>
         </div>
 
-        {/* Timer Bar */}
+        {/* Question Progress Bar */}
         <div className="w-full h-1.5 bg-stone-100 rounded-full overflow-hidden">
           <div
-            className={`h-full transition-all duration-1000 ${timeLeft <= 10 ? 'bg-red-500' : 'bg-emerald-500'}`}
-            style={{ width: `${(timeLeft / initialTime) * 100}%` }}
+            className="h-full bg-emerald-500 transition-all duration-300"
+            style={{ width: `${progressPercent}%` }}
           />
         </div>
       </div>
@@ -287,12 +254,6 @@ export default function QuizScreen({ ingredientIds, onQuizComplete, difficulty =
           </motion.div>
         )}
 
-        {/* Time-out Indicator */}
-        {isAnswered && selectedOptionIndex === -1 && (
-          <div className="p-4 rounded-xl border border-red-200 bg-red-50/30 text-center text-red-600 font-semibold text-sm">
-            ⏰ 時間切れになってしまいました！
-          </div>
-        )}
       </div>
 
       {/* Explanation & Mini Commentary Panel */}

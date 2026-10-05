@@ -30,9 +30,10 @@ export default function ResultScreen({
 
   // 正解数と合計スコアの計算
   const correctCount = answers.filter((a) => a.isCorrect).length;
-  const accuracy = correctCount / answers.length;
+  const accuracy = answers.length > 0 ? correctCount / answers.length : 0;
   const isDelicious = accuracy >= 0.5;
-  const totalEarnedScore = answers.reduce((acc, curr) => acc + curr.score, 0);
+  // 点数計算：（正解数 / 選んだ食材数）× 100（小数点は四捨五入）、そのまま獲得スコアに反映
+  const totalEarnedScore = answers.length > 0 ? Math.round((correctCount / answers.length) * 100) : 0;
 
   // 調理アニメーションの進行
   useEffect(() => {
