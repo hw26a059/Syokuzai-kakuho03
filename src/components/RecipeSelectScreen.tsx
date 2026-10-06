@@ -194,7 +194,7 @@ export default function RecipeSelectScreen({ onStartCooking }: RecipeSelectScree
                               : 'text-stone-400 hover:text-stone-600'
                           }`}
                         >
-                          簡単（標準）
+                          簡単
                         </button>
                         <button
                           type="button"
@@ -206,7 +206,7 @@ export default function RecipeSelectScreen({ onStartCooking }: RecipeSelectScree
                               : 'text-stone-400 hover:text-red-500'
                           }`}
                         >
-                          難しい（30秒）
+                          難しい
                         </button>
                       </div>
                     </div>
