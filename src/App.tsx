@@ -3,62 +3,57 @@ import Header from './components/Header';
 import NicknameScreen from './components/NicknameScreen';
 import RecipeSelectScreen from './components/RecipeSelectScreen';
 import QuizScreen from './components/QuizScreen';
+import CookingPuzzleScreen from './components/CookingPuzzleScreen';
 import ResultScreen from './components/ResultScreen';
-import BookScreen from './components/BookScreen';
-import RankingScreen from './components/RankingScreen';
-import { Recipe, Dish } from './types';
+import RecipeBookScreen from './components/RecipeBookScreen';
+import IngredientEncyclopediaScreen from './components/IngredientEncyclopediaScreen';
+import { Recipe } from './types';
 
 export default function App() {
   const [nickname, setNickname] = useState<string | null>(null);
   const [totalScore, setTotalScore] = useState<number>(0);
-  const [dishes, setDishes] = useState<Dish[]>([]);
-  const [currentTab, setTab] = useState<'game' | 'book' | 'ranking'>('game');
+  const [unlockedIngredientIds, setUnlockedIngredientIds] = useState<string[]>([]);
+  const [currentTab, setTab] = useState<'game' | 'recipes' | 'encyclopedia'>('game');
 
   // ゲーム内のフェーズ（ゲームタブ選択時）
-  const [gameState, setGameState] = useState<'select' | 'quiz' | 'result'>('select');
+  const [gameState, setGameState] = useState<'select' | 'quiz' | 'cooking' | 'result'>('select');
   const [currentRecipe, setCurrentRecipe] = useState<Recipe | null>(null);
   const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
   const [difficulty, setDifficulty] = useState<'easy' | 'hard'>('easy');
   const [quizAnswers, setQuizAnswers] = useState<{ ingredientId: string; isCorrect: boolean; score: number }[]>([]);
-  const [isSaved, setIsSaved] = useState<boolean>(false);
+  const [cookingResult, setCookingResult] = useState<{
+    correctCount: number;
+    totalCount: number;
+    score: number;
+    isPassed: boolean;
+  } | null>(null);
 
   // 起動時のローカルストレージ読み込み
   useEffect(() => {
     const savedName = localStorage.getItem('syokuzai_nickname');
     const savedScore = localStorage.getItem('syokuzai_total_score');
-    const savedDishes = localStorage.getItem('syokuzai_dishes');
+    const savedUnlocked = localStorage.getItem('syokuzai_unlocked_ingredients');
 
     if (savedName) setNickname(savedName);
     if (savedScore) setTotalScore(parseInt(savedScore, 10) || 0);
-    if (savedDishes) {
+    if (savedUnlocked) {
       try {
-        setDishes(JSON.parse(savedDishes));
+        setUnlockedIngredientIds(JSON.parse(savedUnlocked));
       } catch (e) {
-        console.error('Failed to parse saved dishes:', e);
+        console.error('Failed to parse unlocked ingredients:', e);
       }
     }
   }, []);
 
   // ニックネーム登録
-  const handleRegisterNickname = async (name: string) => {
+  const handleRegisterNickname = (name: string) => {
     setNickname(name);
     localStorage.setItem('syokuzai_nickname', name);
-
-    // サーバーに登録（または初期スコア0でランキングに名前を載せる）
-    try {
-      await fetch('/api/ranking', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nickname: name, score: totalScore }),
-      });
-    } catch (e) {
-      console.error('Failed to register score to server on init:', e);
-    }
   };
 
   // ニックネーム変更・リセット
   const handleResetNickname = () => {
-    if (window.confirm('ニックネームを変更しますか？（現在のデータは保持されます）')) {
+    if (window.confirm('ニックネームを変更しますか？（スコアや図鑑データは保持されます）')) {
       setNickname(null);
       localStorage.removeItem('syokuzai_nickname');
     }
@@ -70,39 +65,64 @@ export default function App() {
     setSelectedIngredients(ingredients);
     setDifficulty(diff);
     setQuizAnswers([]);
-    setIsSaved(false);
+    setCookingResult(null);
     setGameState('quiz');
   };
 
-  // クイズ回答完了
-  const handleQuizComplete = (answers: { ingredientId: string; isCorrect: boolean; score: number }[]) => {
-    setQuizAnswers(answers);
-    setGameState('result');
+  // 食材図鑑の解放処理
+  const unlockIngredientsFromAnswers = (answers: { ingredientId: string; isCorrect: boolean }[]) => {
+    const correctIds = answers.filter((a) => a.isCorrect).map((a) => a.ingredientId);
+    if (correctIds.length === 0) return;
+
+    setUnlockedIngredientIds((prev) => {
+      const merged = Array.from(new Set([...prev, ...correctIds]));
+      localStorage.setItem('syokuzai_unlocked_ingredients', JSON.stringify(merged));
+      return merged;
+    });
   };
 
-  // 料理の保存＆スコア送信
-  const handleSaveDish = async (dish: Dish, addedScore: number) => {
-    const newDishes = [dish, ...dishes];
-    setDishes(newDishes);
-    localStorage.setItem('syokuzai_dishes', JSON.stringify(newDishes));
+  // スコアの加算処理
+  const addScore = (earnedScore: number) => {
+    setTotalScore((prev) => {
+      const updated = prev + earnedScore;
+      localStorage.setItem('syokuzai_total_score', updated.toString());
+      return updated;
+    });
+  };
 
-    const newScore = totalScore + addedScore;
-    setTotalScore(newScore);
-    localStorage.setItem('syokuzai_total_score', newScore.toString());
-    setIsSaved(true);
+  // クイズ回答完了（カレーライスの場合は調理パズルへ、それ以外は直接リザルトへ）
+  const handleQuizComplete = (answers: { ingredientId: string; isCorrect: boolean; score: number }[]) => {
+    setQuizAnswers(answers);
+    unlockIngredientsFromAnswers(answers);
 
-    // サーバーに累計スコアを送信
-    if (nickname) {
-      try {
-        await fetch('/api/ranking', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ nickname, score: newScore }),
-        });
-      } catch (e) {
-        console.error('Failed to update score to server:', e);
-      }
+    if (currentRecipe?.id === 'curry') {
+      setGameState('cooking');
+    } else {
+      setCookingResult(null);
+      // カレーライス以外は目利きスコアを加算
+      const correctCount = answers.filter((a) => a.isCorrect).length;
+      const earned = answers.length > 0 ? Math.round((correctCount / answers.length) * 100) : 0;
+      addScore(earned);
+      setGameState('result');
     }
+  };
+
+  // 調理パズル完了（カレーライス）
+  const handleCookingComplete = (result: {
+    correctCount: number;
+    totalCount: number;
+    score: number;
+    isPassed: boolean;
+  }) => {
+    setCookingResult(result);
+
+    // 目利き得点 + 調理得点を累計スコアに加算
+    const quizCorrectCount = quizAnswers.filter((a) => a.isCorrect).length;
+    const quizScore = quizAnswers.length > 0 ? Math.round((quizCorrectCount / quizAnswers.length) * 100) : 0;
+    const totalEarned = quizScore + result.score;
+    addScore(totalEarned);
+
+    setGameState('result');
   };
 
   // もう一度遊ぶ（レシピ選択に戻る）
@@ -110,14 +130,9 @@ export default function App() {
     setCurrentRecipe(null);
     setSelectedIngredients([]);
     setQuizAnswers([]);
-    setIsSaved(false);
+    setCookingResult(null);
     setGameState('select');
     setTab('game');
-  };
-
-  // 図鑑を見に行く
-  const handleViewBook = () => {
-    setTab('book');
   };
 
   // 未登録時は登録画面を表示
@@ -150,27 +165,34 @@ export default function App() {
                 difficulty={difficulty}
               />
             )}
+            {gameState === 'cooking' && currentRecipe && (
+              <CookingPuzzleScreen
+                recipe={currentRecipe}
+                onCookingComplete={handleCookingComplete}
+              />
+            )}
             {gameState === 'result' && currentRecipe && (
               <ResultScreen
                 recipe={currentRecipe}
                 selectedIngredients={selectedIngredients}
                 answers={quizAnswers}
-                nickname={nickname}
-                onSaveDish={handleSaveDish}
+                cookingResult={cookingResult || undefined}
                 onRestart={handleRestart}
-                onViewBook={handleViewBook}
-                isSaved={isSaved}
+                onViewEncyclopedia={() => setTab('encyclopedia')}
+                onViewRecipes={() => setTab('recipes')}
               />
             )}
           </>
         )}
 
-        {currentTab === 'book' && (
-          <BookScreen dishes={dishes} />
+        {currentTab === 'recipes' && (
+          <RecipeBookScreen />
         )}
 
-        {currentTab === 'ranking' && (
-          <RankingScreen currentNickname={nickname} />
+        {currentTab === 'encyclopedia' && (
+          <IngredientEncyclopediaScreen
+            unlockedIngredientIds={unlockedIngredientIds}
+          />
         )}
       </main>
     </div>

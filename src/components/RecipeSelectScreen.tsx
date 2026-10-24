@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { ChefHat, Check, Plus, AlertCircle } from 'lucide-react';
+import { ChefHat, Check, Plus, AlertCircle, Lock } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Recipe, Ingredient } from '../types';
+import { Recipe } from '../types';
 import { RECIPES, INGREDIENTS } from '../data/gameData';
 
 interface RecipeSelectScreenProps {
@@ -16,16 +16,16 @@ export default function RecipeSelectScreen({ onStartCooking }: RecipeSelectScree
   // レシピ選択時の処理
   const handleSelectRecipe = (recipe: Recipe) => {
     setSelectedRecipe(recipe);
-    // 必須食材を最初から選択状態にする
+    // 初期選択食材を設定
     setSelectedIngredients([...recipe.requiredIngredients]);
   };
 
-  // トッピング（追加具材）のトグル処理
+  // 食材のトグル処理（固定食材は外せない、その他は解除可能）
   const handleToggleIngredient = (ingredientId: string) => {
     if (!selectedRecipe) return;
 
-    // 必須食材は外せない
-    if (selectedRecipe.requiredIngredients.includes(ingredientId)) {
+    // 固定必須食材は解除不可
+    if (selectedRecipe.fixedIngredients?.includes(ingredientId)) {
       return;
     }
 
@@ -38,9 +38,47 @@ export default function RecipeSelectScreen({ onStartCooking }: RecipeSelectScree
     });
   };
 
+  // クイズ開始可能条件のチェック
+  const minIngredients = selectedRecipe?.minIngredients ?? 1;
+  const currentCount = selectedIngredients.length;
+  const isMinCountMet = currentCount >= minIngredients;
+
+  // 固定食材がすべて含まれているか
+  const isFixedMet = selectedRecipe?.fixedIngredients
+    ? selectedRecipe.fixedIngredients.every((id) => selectedIngredients.includes(id))
+    : true;
+
+  // カテゴリ指定（例：肉類1個、ひき肉類1個）が満たされているか
+  const isCategoryMet = selectedRecipe?.requiredCategory
+    ? selectedRecipe.requiredCategory.ingredientIds.some((id) => selectedIngredients.includes(id))
+    : true;
+
+  const canStartCooking = Boolean(selectedRecipe && isMinCountMet && isFixedMet && isCategoryMet);
+
+  // エラー/不足メッセージの生成
+  const getValidationMessages = (): string[] => {
+    if (!selectedRecipe) return [];
+    const messages: string[] = [];
+    if (!isMinCountMet) {
+      messages.push(`食材をあと ${minIngredients - currentCount} 個選んでください（最低 ${minIngredients} 個必要）`);
+    }
+    if (!isFixedMet && selectedRecipe.fixedIngredients) {
+      const missingFixed = selectedRecipe.fixedIngredients
+        .filter((id) => !selectedIngredients.includes(id))
+        .map((id) => INGREDIENTS[id]?.name || id);
+      messages.push(`固定必須食材（${missingFixed.join('、')}）が必要です`);
+    }
+    if (!isCategoryMet && selectedRecipe.requiredCategory) {
+      messages.push(`${selectedRecipe.requiredCategory.label}から1つ以上食材を選んでください`);
+    }
+    return messages;
+  };
+
+  const validationMessages = getValidationMessages();
+
   // 目利きクイズ開始
   const handleStart = () => {
-    if (!selectedRecipe) return;
+    if (!selectedRecipe || !canStartCooking) return;
     onStartCooking(selectedRecipe, selectedIngredients, difficulty);
   };
 
@@ -76,11 +114,16 @@ export default function RecipeSelectScreen({ onStartCooking }: RecipeSelectScree
                           : 'border-stone-200 hover:border-stone-300 bg-white hover:bg-stone-50'
                       }`}
                     >
-                      <h4 className="font-semibold text-stone-800 text-sm">
-                        {recipe.name}
-                      </h4>
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-semibold text-stone-800 text-sm">
+                          {recipe.name}
+                        </h4>
+                        <span className="text-[10px] bg-stone-100 text-stone-500 font-bold px-1.5 py-0.5 rounded">
+                          最低 {recipe.minIngredients}個
+                        </span>
+                      </div>
                       <p className="text-xs text-stone-400 mt-1 line-clamp-1">
-                        具材: {recipe.requiredIngredients.map(id => INGREDIENTS[id]?.name).join(', ')}
+                        基本: {recipe.requiredIngredients.map((id) => INGREDIENTS[id]?.name).join(', ')}
                       </p>
                     </button>
                   );
@@ -90,9 +133,9 @@ export default function RecipeSelectScreen({ onStartCooking }: RecipeSelectScree
           ))}
         </div>
 
-        {/* Right: Customizer Panel */}
-        <div className="space-y-6">
-          <div className="bg-stone-50 border border-stone-150 rounded-2xl p-5 sticky top-24">
+        {/* Right: Ingredient Customization & Start Panel */}
+        <div className="md:col-span-1">
+          <div className="bg-white border border-stone-200 rounded-2xl p-5 sticky top-6 shadow-sm">
             <AnimatePresence mode="wait">
               {selectedRecipe ? (
                 <motion.div
@@ -109,65 +152,117 @@ export default function RecipeSelectScreen({ onStartCooking }: RecipeSelectScree
                     <h3 className="text-lg font-bold text-stone-800 mt-1.5">
                       {selectedRecipe.name}
                     </h3>
-                    <p className="text-xs text-stone-400 mt-1">
-                      必要な食材を確保してクイズに挑戦します。
+                    <p className="text-xs text-stone-500 mt-1">
+                      最低必要食材数: <span className="font-bold text-emerald-600">{selectedRecipe.minIngredients} 個</span>
+                      {selectedRecipe.requiredCategory && (
+                        <span className="block text-stone-400 mt-0.5">※{selectedRecipe.requiredCategory.label}から1個以上必須</span>
+                      )}
                     </p>
                   </div>
 
                   {/* Ingredients Section */}
                   <div className="space-y-3">
-                    <h4 className="text-xs font-semibold text-stone-500">食材構成（タップして選択）</h4>
+                    <div className="flex justify-between items-center">
+                      <h4 className="text-xs font-semibold text-stone-500">食材構成（タップして選択・解除）</h4>
+                      <span className="text-xs font-bold text-stone-600">
+                        選択中: {selectedIngredients.length} / 最低 {selectedRecipe.minIngredients}個
+                      </span>
+                    </div>
                     
                     <div className="space-y-1.5 max-h-[300px] overflow-y-auto pr-1">
-                      {/* Required Ingredients (Pre-selected and fixed) */}
+                      {/* 基本食材リスト（固定食材は外せない、その他は解除可能） */}
+                      <div className="text-[11px] font-bold text-stone-400 px-1 pt-1">基本食材</div>
                       {selectedRecipe.requiredIngredients.map((id) => {
                         const ingredient = INGREDIENTS[id];
                         if (!ingredient) return null;
-                        return (
-                          <div
-                            key={id}
-                            className="flex items-center justify-between p-2.5 bg-white rounded-xl border border-stone-100 shadow-xs"
-                          >
-                            <span className="text-stone-700 text-sm font-medium flex items-center gap-1.5">
-                              <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
-                              {ingredient.name}
-                            </span>
-                            <span className="text-xs font-bold text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded flex items-center gap-1">
-                              <Check size={12} />
-                              必須
-                            </span>
-                          </div>
-                        );
-                      })}
-
-                      {/* Optional Ingredients */}
-                      {selectedRecipe.optionalIngredients.map((id) => {
-                        const ingredient = INGREDIENTS[id];
-                        if (!ingredient) return null;
+                        const isFixed = selectedRecipe.fixedIngredients?.includes(id);
                         const isChecked = selectedIngredients.includes(id);
                         return (
                           <button
                             key={id}
                             id={`ingredient-toggle-${id}`}
                             onClick={() => handleToggleIngredient(id)}
-                            className={`w-full flex items-center justify-between p-2.5 rounded-xl border transition-all text-left cursor-pointer ${
-                              isChecked
-                                ? 'border-emerald-500 bg-emerald-50/20 text-emerald-700 font-medium'
-                                : 'border-stone-200 bg-white hover:bg-stone-50 text-stone-600'
+                            disabled={isFixed}
+                            className={`w-full flex items-center justify-between p-2.5 rounded-xl border transition-all text-left ${
+                              isFixed
+                                ? 'border-amber-200 bg-amber-50/50 text-amber-900 cursor-not-allowed'
+                                : isChecked
+                                ? 'border-emerald-500 bg-emerald-50/20 text-emerald-700 font-medium cursor-pointer'
+                                : 'border-stone-200 bg-white hover:bg-stone-50 text-stone-400 cursor-pointer'
                             }`}
                           >
                             <span className="text-sm flex items-center gap-1.5">
-                              <span className={`w-1.5 h-1.5 rounded-full ${isChecked ? 'bg-emerald-500' : 'bg-stone-300'}`} />
+                              <span
+                                className={`w-1.5 h-1.5 rounded-full ${
+                                  isFixed ? 'bg-amber-500' : isChecked ? 'bg-emerald-500' : 'bg-stone-300'
+                                }`}
+                              />
                               {ingredient.name}
                             </span>
-                            <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all ${
-                              isChecked ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-stone-300'
-                            }`}>
-                              {isChecked ? <Check size={14} /> : <Plus size={14} className="text-stone-400" />}
+                            <div className="flex items-center gap-1.5">
+                              {isFixed && (
+                                <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded flex items-center gap-1">
+                                  <Lock size={10} />
+                                  固定
+                                </span>
+                              )}
+                              <div
+                                className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all ${
+                                  isFixed
+                                    ? 'border-amber-400 bg-amber-400 text-white'
+                                    : isChecked
+                                    ? 'border-emerald-500 bg-emerald-500 text-white'
+                                    : 'border-stone-300'
+                                }`}
+                              >
+                                {isChecked || isFixed ? <Check size={14} /> : <Plus size={14} className="text-stone-400" />}
+                              </div>
                             </div>
                           </button>
                         );
                       })}
+
+                      {/* 追加・代替可能食材 */}
+                      {selectedRecipe.optionalIngredients.length > 0 && (
+                        <>
+                          <div className="text-[11px] font-bold text-stone-400 px-1 pt-2">追加・変更可能食材</div>
+                          {selectedRecipe.optionalIngredients.map((id) => {
+                            const ingredient = INGREDIENTS[id];
+                            if (!ingredient) return null;
+                            const isChecked = selectedIngredients.includes(id);
+                            return (
+                              <button
+                                key={id}
+                                id={`ingredient-toggle-${id}`}
+                                onClick={() => handleToggleIngredient(id)}
+                                className={`w-full flex items-center justify-between p-2.5 rounded-xl border transition-all text-left cursor-pointer ${
+                                  isChecked
+                                    ? 'border-emerald-500 bg-emerald-50/20 text-emerald-700 font-medium'
+                                    : 'border-stone-200 bg-white hover:bg-stone-50 text-stone-600'
+                                }`}
+                              >
+                                <span className="text-sm flex items-center gap-1.5">
+                                  <span
+                                    className={`w-1.5 h-1.5 rounded-full ${
+                                      isChecked ? 'bg-emerald-500' : 'bg-stone-300'
+                                    }`}
+                                  />
+                                  {ingredient.name}
+                                </span>
+                                <div
+                                  className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all ${
+                                    isChecked
+                                      ? 'border-emerald-500 bg-emerald-500 text-white'
+                                      : 'border-stone-300'
+                                  }`}
+                                >
+                                  {isChecked ? <Check size={14} /> : <Plus size={14} className="text-stone-400" />}
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </>
+                      )}
                     </div>
                   </div>
 
@@ -211,10 +306,28 @@ export default function RecipeSelectScreen({ onStartCooking }: RecipeSelectScree
                       </div>
                     </div>
 
+                    {/* バリデーション警告メッセージ */}
+                    {!canStartCooking && validationMessages.length > 0 && (
+                      <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs space-y-1">
+                        <div className="flex items-center gap-1 font-bold text-amber-900">
+                          <AlertCircle size={14} />
+                          <span>開始条件を満たしていません</span>
+                        </div>
+                        {validationMessages.map((msg, i) => (
+                          <div key={i} className="pl-4">・{msg}</div>
+                        ))}
+                      </div>
+                    )}
+
                     <button
                       id="start-quiz-btn"
                       onClick={handleStart}
-                      className="w-full bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white font-semibold py-3 px-4 rounded-xl transition-all shadow-md shadow-emerald-500/10 flex items-center justify-center gap-2 cursor-pointer"
+                      disabled={!canStartCooking}
+                      className={`w-full py-3 px-4 rounded-xl font-semibold transition-all shadow-md flex items-center justify-center gap-2 ${
+                        canStartCooking
+                          ? 'bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white shadow-emerald-500/10 cursor-pointer'
+                          : 'bg-stone-200 text-stone-400 shadow-none cursor-not-allowed'
+                      }`}
                     >
                       <span>目利きクイズを始める</span>
                     </button>

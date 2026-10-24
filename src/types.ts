@@ -11,6 +11,13 @@ export interface Recipe {
   requiredIngredients: string[]; // Ingredient IDs that are pre-selected
   optionalIngredients: string[]; // Ingredient IDs that can be added
   excludedIngredients: string[]; // Ingredient IDs that MUST NOT appear
+  minIngredients: number; // 最低必要食材数
+  fixedIngredients?: string[]; // 外せない固定必須食材ID一覧
+  requiredCategory?: {
+    label: string;
+    ingredientIds: string[];
+  };
+  cookingSteps?: string[]; // 正しい調理手順の並び順
 }
 
 export type Difficulty = 'easy' | 'hard';

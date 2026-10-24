@@ -1,80 +1,81 @@
 import React, { useState, useEffect } from 'react';
-import { ChefHat, ArrowRight, Save, RotateCcw, Award, Sparkles, BookOpen } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
-import { Recipe, Dish } from '../types';
+import { ChefHat, RotateCcw, Award, Sparkles, BookOpen, Utensils, CheckCircle } from 'lucide-react';
+import { motion } from 'motion/react';
+import { Recipe } from '../types';
 import { INGREDIENTS } from '../data/gameData';
 
 interface ResultScreenProps {
   recipe: Recipe;
   selectedIngredients: string[];
   answers: { ingredientId: string; isCorrect: boolean; score: number }[];
-  nickname: string;
-  onSaveDish: (dish: Dish, addedScore: number) => void;
+  cookingResult?: {
+    correctCount: number;
+    totalCount: number;
+    score: number;
+    isPassed: boolean;
+  };
   onRestart: () => void;
-  onViewBook: () => void;
-  isSaved: boolean;
+  onViewEncyclopedia: () => void;
+  onViewRecipes: () => void;
 }
 
 export default function ResultScreen({
   recipe,
   selectedIngredients,
   answers,
-  nickname,
-  onSaveDish,
+  cookingResult,
   onRestart,
-  onViewBook,
-  isSaved
+  onViewEncyclopedia,
+  onViewRecipes
 }: ResultScreenProps) {
-  const [cookingPhase, setCookingPhase] = useState<'chopping' | 'boiling' | 'completed'>('chopping');
-  const [customName, setCustomName] = useState('');
+  const isCurry = recipe.id === 'curry';
+  // カレーライスはパズルを既に実施したため調理アニメーションは即時完了
+  const [cookingPhase, setCookingPhase] = useState<'chopping' | 'boiling' | 'completed'>(
+    isCurry ? 'completed' : 'chopping'
+  );
 
-  // 正解数と合計スコアの計算
-  const correctCount = answers.filter((a) => a.isCorrect).length;
-  const accuracy = answers.length > 0 ? correctCount / answers.length : 0;
-  const isDelicious = accuracy >= 0.5;
-  // 点数計算：（正解数 / 選んだ食材数）× 100（小数点は四捨五入）、そのまま獲得スコアに反映
-  const totalEarnedScore = answers.length > 0 ? Math.round((correctCount / answers.length) * 100) : 0;
+  // 目利きパートの計算
+  const correctAnswers = answers.filter((a) => a.isCorrect);
+  const correctCount = correctAnswers.length;
+  const quizAccuracy = answers.length > 0 ? correctCount / answers.length : 0;
+  const quizScore = answers.length > 0 ? Math.round((correctCount / answers.length) * 100) : 0;
 
-  // 調理アニメーションの進行
+  // 調理パートの計算（カレーライスの場合）
+  const cookingAccuracy = cookingResult
+    ? cookingResult.totalCount > 0
+      ? cookingResult.correctCount / cookingResult.totalCount
+      : 0
+    : 1;
+  const cookingScore = cookingResult ? cookingResult.score : 0;
+
+  // 評価基準：目利きパート（正解率60%以上）、調理パート（得点率60%以上）両方達成で大成功
+  const isQuizPassed = quizAccuracy >= 0.6;
+  const isCookingPassed = cookingResult ? cookingAccuracy >= 0.6 : true;
+  const isDelicious = isQuizPassed && isCookingPassed;
+
+  // 合計獲得スコア：カレーライスは100+100の最大200点、それ以外は最大100点
+  const totalEarnedScore = isCurry ? quizScore + cookingScore : quizScore;
+
+  // 今回正解して食材図鑑に登録された食材リスト
+  const newlyUnlockedIngredients = correctAnswers.map((a) => INGREDIENTS[a.ingredientId]).filter(Boolean);
+
+  // 調理アニメーションの進行（カレーライス以外の場合）
   useEffect(() => {
+    if (isCurry) return;
+
     const timer1 = setTimeout(() => {
       setCookingPhase('boiling');
-    }, 1500);
+    }, 1200);
 
     const timer2 = setTimeout(() => {
       setCookingPhase('completed');
-    }, 3200);
+    }, 2400);
 
     return () => {
       clearTimeout(timer1);
       clearTimeout(timer2);
     };
-  }, []);
-
-  // 初期カスタム料理名の決定（例：ベースレシピ名を初期値に、トッピングなどを加味できるがシンプルにベース名）
-  useEffect(() => {
-    if (cookingPhase === 'completed') {
-      setCustomName(recipe.name);
-    }
-  }, [cookingPhase, recipe]);
-
-  const handleSave = () => {
-    const trimmed = customName.trim();
-    if (!trimmed) return;
-
-    const newDish: Dish = {
-      id: Math.random().toString(36).substring(2, 11),
-      recipeId: recipe.id,
-      baseRecipeName: recipe.name,
-      customName: trimmed,
-      ingredients: selectedIngredients.map((id) => INGREDIENTS[id]?.name || ''),
-      score: totalEarnedScore,
-      accuracy,
-      timestamp: Date.now()
-    };
-
-    onSaveDish(newDish, totalEarnedScore);
-  };
+  }, [isCurry]);
 
   if (cookingPhase !== 'completed') {
     return (
@@ -97,13 +98,12 @@ export default function ResultScreen({
           新鮮な目利き食材たちが、絶品の料理に仕上がっていきます。少々お待ちください。
         </p>
 
-        {/* Cooking progress visualizer */}
         <div className="w-48 h-1.5 bg-stone-100 rounded-full overflow-hidden mt-6 mx-auto">
           <motion.div
             className="h-full bg-emerald-500"
             initial={{ width: 0 }}
             animate={{ width: cookingPhase === 'chopping' ? '50%' : '100%' }}
-            transition={{ duration: 1.5 }}
+            transition={{ duration: 1.2 }}
           />
         </div>
       </div>
@@ -135,87 +135,127 @@ export default function ResultScreen({
         {/* Title */}
         <div>
           <h2 className="text-2xl font-black text-stone-800 tracking-tight">
-            {isDelicious ? 'お見事！最高の仕上がりです！' : 'うーん... 味がちょっとイマイチです...'}
+            {isDelicious ? `${recipe.name}が美味しく完成しました！` : 'うーん... 味がちょっとイマイチです...'}
           </h2>
           <p className="text-xs text-stone-400 mt-2">
-            お肉、お魚、野菜のクイズ正解率は {Math.round(accuracy * 100)}% ({correctCount}/{answers.length}) でした。
+            {isDelicious
+              ? '目利き・調理ともに基準（60%以上）をクリアしました！'
+              : '合格の条件（目利き・調理の両方60%以上）に届きませんでした。'}
           </p>
         </div>
 
-        {/* Score Card */}
+        {/* Score Breakdown Cards */}
+        <div className="grid grid-cols-2 gap-3 text-left">
+          <div className="bg-stone-50 border border-stone-150 rounded-2xl p-4">
+            <span className="text-[11px] font-bold text-stone-400 block uppercase">
+              目利きクイズ
+            </span>
+            <div className="flex items-baseline justify-between mt-1">
+              <span className="text-xl font-black text-stone-800 font-mono">
+                {quizScore} <span className="text-xs font-normal">/ 100点</span>
+              </span>
+              <span className={`text-xs font-bold ${isQuizPassed ? 'text-emerald-600' : 'text-red-500'}`}>
+                {Math.round(quizAccuracy * 100)}% {isQuizPassed ? '合格' : '不合格'}
+              </span>
+            </div>
+            <span className="text-[10px] text-stone-400 block mt-1">
+              正解数: {correctCount} / {answers.length}
+            </span>
+          </div>
+
+          <div className="bg-stone-50 border border-stone-150 rounded-2xl p-4">
+            <span className="text-[11px] font-bold text-stone-400 block uppercase">
+              調理手順パズル
+            </span>
+            <div className="flex items-baseline justify-between mt-1">
+              {cookingResult ? (
+                <>
+                  <span className="text-xl font-black text-stone-800 font-mono">
+                    {cookingScore} <span className="text-xs font-normal">/ 100点</span>
+                  </span>
+                  <span className={`text-xs font-bold ${isCookingPassed ? 'text-emerald-600' : 'text-red-500'}`}>
+                    {Math.round(cookingAccuracy * 100)}% {isCookingPassed ? '合格' : '不合格'}
+                  </span>
+                </>
+              ) : (
+                <span className="text-xs text-stone-400 font-medium">
+                  自動調理（対象外）
+                </span>
+              )}
+            </div>
+            <span className="text-[10px] text-stone-400 block mt-1">
+              {cookingResult
+                ? `正解数: ${cookingResult.correctCount} / ${cookingResult.totalCount}`
+                : '－'}
+            </span>
+          </div>
+        </div>
+
+        {/* Total Score Card */}
         <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 rounded-2xl p-5 flex items-center justify-between">
           <div className="text-left">
-            <span className="text-xs font-semibold text-emerald-600 tracking-wider uppercase block">獲得スコア</span>
-            <span className="text-2xl font-black text-emerald-700 font-mono">+{totalEarnedScore.toLocaleString()} <span className="text-xs">pts</span></span>
+            <span className="text-xs font-semibold text-emerald-600 tracking-wider uppercase block">
+              今回の獲得スコア（最大{isCurry ? '200' : '100'}点）
+            </span>
+            <span className="text-2xl font-black text-emerald-700 font-mono">
+              +{totalEarnedScore.toLocaleString()} <span className="text-xs">pts</span>
+            </span>
           </div>
           <Award className="text-emerald-500" size={36} />
         </div>
 
-        {/* Interactive naming section (If delicious) */}
-        {isDelicious ? (
-          <div className="bg-stone-50 border border-stone-150 rounded-2xl p-5 text-left space-y-4">
-            <div>
-              <label htmlFor="dish-name" className="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-2">
-                この料理に自由に名前を付けよう（料理図鑑に登録されます）
-              </label>
-              <div className="flex gap-2">
-                <input
-                  id="dish-name-input"
-                  type="text"
-                  value={customName}
-                  onChange={(e) => setCustomName(e.target.value)}
-                  placeholder="例：ウルトラ具だくさんカレー"
-                  disabled={isSaved}
-                  className="flex-1 px-4 py-2.5 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-stone-800 transition-all font-semibold bg-white disabled:bg-stone-100 disabled:text-stone-400 text-sm"
-                  maxLength={20}
-                />
-                <button
-                  id="save-dish-btn"
-                  onClick={handleSave}
-                  disabled={isSaved || !customName.trim()}
-                  className="bg-emerald-500 hover:bg-emerald-600 disabled:bg-stone-200 text-white font-semibold px-4 rounded-xl transition-all shadow-sm flex items-center gap-1.5 text-sm cursor-pointer"
-                >
-                  <Save size={16} />
-                  <span>{isSaved ? '登録済' : '図鑑に登録'}</span>
-                </button>
-              </div>
+        {/* 食材図鑑の解放通知 */}
+        {newlyUnlockedIngredients.length > 0 && (
+          <div className="bg-emerald-50/60 border border-emerald-200 rounded-2xl p-4 text-left space-y-2">
+            <div className="flex items-center gap-1.5 text-emerald-800 font-bold text-xs">
+              <CheckCircle size={14} className="text-emerald-600" />
+              <span>食材図鑑に登録されました！</span>
             </div>
-            <p className="text-[11px] text-stone-400">
-              ※食材: {selectedIngredients.map((id) => INGREDIENTS[id]?.name || '').join(', ')}
-            </p>
-          </div>
-        ) : (
-          <div className="bg-stone-50 border border-stone-150 rounded-2xl p-5 text-left text-stone-500 text-xs leading-relaxed space-y-2">
-            <p className="font-semibold text-stone-700">❌ 図鑑登録の条件に満たしませんでした</p>
-            <p>
-              クイズの正解率が50%未満（今回は {Math.round(accuracy * 100)}%）だったため、傷んだ食材や旬を過ぎた食材の割合が多くなり、料理が失敗に終わりました。
-            </p>
-            <p className="text-emerald-600 font-medium">
-              ★目利きクイズで正しい食材を選ぶほど、料理の美味しさがアップし、高スコアが狙えます！
+            <div className="flex flex-wrap gap-1.5">
+              {newlyUnlockedIngredients.map((ing) => (
+                <span
+                  key={ing.id}
+                  className="bg-white border border-emerald-300 text-emerald-800 font-semibold px-2.5 py-1 rounded-lg text-xs shadow-2xs"
+                >
+                  {ing.name}
+                </span>
+              ))}
+            </div>
+            <p className="text-[11px] text-emerald-700">
+              ※正解した食材は「食材図鑑」でいつでも詳しい特徴や保存方法をチェックできます。
             </p>
           </div>
         )}
 
         {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-3 pt-2">
-          {isDelicious && isSaved && (
-            <button
-              id="view-book-btn"
-              onClick={onViewBook}
-              className="flex-1 border border-stone-200 hover:border-stone-300 text-stone-700 font-semibold py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2 text-sm cursor-pointer"
-            >
-              <BookOpen size={16} />
-              <span>料理図鑑を見に行く</span>
-            </button>
-          )}
+        <div className="space-y-2 pt-2">
           <button
             id="restart-game-btn"
             onClick={onRestart}
-            className="flex-1 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white font-semibold py-3 px-4 rounded-xl transition-all shadow-md shadow-emerald-500/10 flex items-center justify-center gap-2 text-sm cursor-pointer"
+            className="w-full bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white font-semibold py-3 px-4 rounded-xl transition-all shadow-md shadow-emerald-500/10 flex items-center justify-center gap-2 text-sm cursor-pointer"
           >
             <RotateCcw size={16} />
             <span>もう一度遊ぶ（レシピ選択）</span>
           </button>
+
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              id="view-encyclopedia-btn"
+              onClick={onViewEncyclopedia}
+              className="border border-stone-200 hover:bg-stone-50 text-stone-700 font-semibold py-2.5 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 text-xs cursor-pointer"
+            >
+              <BookOpen size={14} />
+              <span>食材図鑑を見る</span>
+            </button>
+            <button
+              id="view-recipes-btn"
+              onClick={onViewRecipes}
+              className="border border-stone-200 hover:bg-stone-50 text-stone-700 font-semibold py-2.5 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 text-xs cursor-pointer"
+            >
+              <Utensils size={14} />
+              <span>調理レシピを見る</span>
+            </button>
+          </div>
         </div>
       </motion.div>
     </div>

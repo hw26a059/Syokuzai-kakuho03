@@ -67,7 +67,17 @@ export const RECIPES: Recipe[] = [
     baseCategory: 'カレー',
     requiredIngredients: ['jagaimo', 'ninjin', 'tamanegi', 'gyuniku'],
     optionalIngredients: ['butaniku', 'toriniku', 'shimeji', 'nasu', 'renkon', 'ika', 'ebi'],
-    excludedIngredients: ['saba', 'shoga', 'hakusai', 'tofu', 'wakame', 'uzuranoran']
+    excludedIngredients: ['saba', 'shoga', 'hakusai', 'tofu', 'wakame', 'uzuranoran'],
+    minIngredients: 4,
+    fixedIngredients: [],
+    cookingSteps: [
+      '野菜をそれぞれ切る',
+      '肉を切る',
+      '切った具材を炒める',
+      '水を加え、沸騰したら灰汁をとる',
+      'ルウを加えて溶かす',
+      '煮込む'
+    ]
   },
   {
     id: 'nikujaga',
@@ -75,7 +85,13 @@ export const RECIPES: Recipe[] = [
     baseCategory: '肉じゃが',
     requiredIngredients: ['gyuniku', 'jagaimo', 'ninjin', 'tamanegi'],
     optionalIngredients: ['butaniku', 'toriniku', 'shirataki', 'ingen'],
-    excludedIngredients: ['saba', 'remon', 'piman', 'chingensei', 'takenoko', 'kikurage']
+    excludedIngredients: ['saba', 'remon', 'piman', 'chingensei', 'takenoko', 'kikurage'],
+    minIngredients: 4,
+    fixedIngredients: ['jagaimo'],
+    requiredCategory: {
+      label: '肉類',
+      ingredientIds: ['gyuniku', 'butaniku', 'toriniku']
+    }
   },
   {
     id: 'yakisoba',
@@ -83,7 +99,9 @@ export const RECIPES: Recipe[] = [
     baseCategory: '焼きそば',
     requiredIngredients: ['butaniku', 'kyabetsi', 'ninjin', 'moyashi'],
     optionalIngredients: ['ika', 'ebi', 'tamanegi', 'piman'],
-    excludedIngredients: ['saba', 'tofu', 'shijimi', 'satoimo', 'shirataki', 'uzuranoran']
+    excludedIngredients: ['saba', 'tofu', 'shijimi', 'satoimo', 'shirataki', 'uzuranoran'],
+    minIngredients: 4,
+    fixedIngredients: []
   },
   {
     id: 'okonomiyaki',
@@ -91,7 +109,9 @@ export const RECIPES: Recipe[] = [
     baseCategory: 'お好み焼き',
     requiredIngredients: ['butaniku', 'kyabetsi', 'ran'],
     optionalIngredients: ['ika', 'ebi', 'negi', 'chizu', 'chikuwa'],
-    excludedIngredients: ['saba', 'jagaimo', 'satoimo', 'daikon', 'gobo', 'takenoko']
+    excludedIngredients: ['saba', 'jagaimo', 'satoimo', 'daikon', 'gobo', 'takenoko'],
+    minIngredients: 4,
+    fixedIngredients: ['ran']
   },
   {
     id: 'yasaiitame',
@@ -99,7 +119,13 @@ export const RECIPES: Recipe[] = [
     baseCategory: '野菜炒め',
     requiredIngredients: ['butaniku', 'kyabetsi', 'moyashi', 'ninjin', 'piman'],
     optionalIngredients: ['gyuniku', 'toriniku', 'eringi', 'tamanegi'],
-    excludedIngredients: ['saba', 'tofu', 'wakame', 'shijimi', 'uzuranoran', 'shirataki']
+    excludedIngredients: ['saba', 'tofu', 'wakame', 'shijimi', 'uzuranoran', 'shirataki'],
+    minIngredients: 5,
+    fixedIngredients: [],
+    requiredCategory: {
+      label: '肉類',
+      ingredientIds: ['butaniku', 'gyuniku', 'toriniku']
+    }
   },
   {
     id: 'tonjiru',
@@ -107,7 +133,9 @@ export const RECIPES: Recipe[] = [
     baseCategory: '汁物',
     requiredIngredients: ['butaniku', 'daikon', 'ninjin', 'gobo', 'tofu'],
     optionalIngredients: ['satoimo', 'konnyaku', 'jagaimo', 'nagaranege'],
-    excludedIngredients: ['saba', 'remon', 'piman', 'chizu', 'masshurumu', 'gurinpiisu']
+    excludedIngredients: ['saba', 'remon', 'piman', 'chizu', 'masshurumu', 'gurinpiisu'],
+    minIngredients: 5,
+    fixedIngredients: ['butaniku']
   },
   {
     id: 'misoshiru',
@@ -115,7 +143,9 @@ export const RECIPES: Recipe[] = [
     baseCategory: '汁物',
     requiredIngredients: ['tofu', 'wakame', 'nagaranege'],
     optionalIngredients: ['aburaage', 'jagaimo', 'shimeji', 'nasu', 'horenso', 'shijimi'],
-    excludedIngredients: ['saba', 'gyuniku', 'toriniku', 'uzuranoran', 'remon', 'chingensei']
+    excludedIngredients: ['saba', 'gyuniku', 'toriniku', 'uzuranoran', 'remon', 'chingensei'],
+    minIngredients: 4,
+    fixedIngredients: []
   },
   {
     id: 'sabamiso',
@@ -123,7 +153,9 @@ export const RECIPES: Recipe[] = [
     baseCategory: '魚料理',
     requiredIngredients: ['saba', 'shoga'],
     optionalIngredients: ['shiraganege', 'shishito'],
-    excludedIngredients: ['jagaimo', 'kyabetsi', 'uzuranoran', 'chizu', 'gurinpiisu', 'shirataki']
+    excludedIngredients: ['jagaimo', 'kyabetsi', 'uzuranoran', 'chizu', 'gurinpiisu', 'shirataki'],
+    minIngredients: 2,
+    fixedIngredients: ['saba', 'shoga']
   },
   {
     id: 'karaage',
@@ -131,7 +163,9 @@ export const RECIPES: Recipe[] = [
     baseCategory: '肉料理',
     requiredIngredients: ['toriniku', 'shoga', 'ninniku'],
     optionalIngredients: ['remon'],
-    excludedIngredients: ['saba', 'tofu', 'daikon', 'hakusai', 'chingensei', 'shirataki']
+    excludedIngredients: ['saba', 'tofu', 'daikon', 'hakusai', 'chingensei', 'shirataki'],
+    minIngredients: 3,
+    fixedIngredients: ['toriniku', 'shoga', 'ninniku']
   },
   {
     id: 'hamburg',
@@ -139,7 +173,9 @@ export const RECIPES: Recipe[] = [
     baseCategory: '肉料理',
     requiredIngredients: ['aibikiku', 'tamanegi', 'ran'],
     optionalIngredients: ['chizu', 'shimeji'],
-    excludedIngredients: ['saba', 'hakusai', 'chingensei', 'shijimi', 'shirataki', 'gobo']
+    excludedIngredients: ['saba', 'hakusai', 'chingensei', 'shijimi', 'shirataki', 'gobo'],
+    minIngredients: 3,
+    fixedIngredients: ['aibikiku', 'tamanegi', 'ran']
   },
   {
     id: 'omurice',
@@ -147,7 +183,9 @@ export const RECIPES: Recipe[] = [
     baseCategory: 'オムライス',
     requiredIngredients: ['toriniku', 'tamanegi', 'ran'],
     optionalIngredients: ['piman', 'masshurumu', 'gurinpiisu'],
-    excludedIngredients: ['saba', 'daikon', 'gobo', 'tofu', 'shijimi', 'shirataki', 'konnyaku']
+    excludedIngredients: ['saba', 'daikon', 'gobo', 'tofu', 'shijimi', 'shirataki', 'konnyaku'],
+    minIngredients: 4,
+    fixedIngredients: ['ran']
   },
   {
     id: 'happosai',
@@ -155,7 +193,9 @@ export const RECIPES: Recipe[] = [
     baseCategory: '中華',
     requiredIngredients: ['butaniku', 'hakusai', 'ninjin', 'uzuranoran', 'ebi', 'ika', 'kikurage'],
     optionalIngredients: ['toriniku', 'chingensei', 'takenoko', 'masshurumu'],
-    excludedIngredients: ['saba', 'satoimo', 'shirataki', 'konnyaku', 'aburaage', 'shijimi']
+    excludedIngredients: ['saba', 'satoimo', 'shirataki', 'konnyaku', 'aburaage', 'shijimi'],
+    minIngredients: 7,
+    fixedIngredients: []
   },
   {
     id: 'shogayaki',
@@ -163,7 +203,9 @@ export const RECIPES: Recipe[] = [
     baseCategory: '肉料理',
     requiredIngredients: ['butaniku', 'shoga', 'kyabetsi'],
     optionalIngredients: ['tamanegi'],
-    excludedIngredients: ['saba', 'tofu', 'wakame', 'uzuranoran', 'shijimi', 'konnyaku']
+    excludedIngredients: ['saba', 'tofu', 'wakame', 'uzuranoran', 'shijimi', 'konnyaku'],
+    minIngredients: 2,
+    fixedIngredients: ['butaniku', 'shoga']
   },
   {
     id: 'tempura',
@@ -171,7 +213,9 @@ export const RECIPES: Recipe[] = [
     baseCategory: '和食',
     requiredIngredients: ['ebi', 'nasu', 'satsuraimo', 'kabotsya', 'shishito'],
     optionalIngredients: ['ika', 'kis', 'oba', 'renkon', 'maitake'],
-    excludedIngredients: ['gyuniku', 'butaniku', 'tofu', 'shirataki', 'konnyaku', 'uzuranoran']
+    excludedIngredients: ['gyuniku', 'butaniku', 'tofu', 'shirataki', 'konnyaku', 'uzuranoran'],
+    minIngredients: 5,
+    fixedIngredients: []
   },
   {
     id: 'mabotofu',
@@ -179,7 +223,13 @@ export const RECIPES: Recipe[] = [
     baseCategory: '中華',
     requiredIngredients: ['torihikiku', 'tofu', 'nagaranege'],
     optionalIngredients: ['butahikiku'],
-    excludedIngredients: ['saba', 'satoimo', 'shirataki', 'konnyaku', 'aburaage', 'shijimi']
+    excludedIngredients: ['saba', 'satoimo', 'shirataki', 'konnyaku', 'aburaage', 'shijimi'],
+    minIngredients: 2,
+    fixedIngredients: ['tofu'],
+    requiredCategory: {
+      label: 'ひき肉類',
+      ingredientIds: ['torihikiku', 'butahikiku']
+    }
   },
   {
     id: 'mabonasu',
@@ -187,7 +237,13 @@ export const RECIPES: Recipe[] = [
     baseCategory: '中華',
     requiredIngredients: ['torihikiku', 'nasu', 'piman'],
     optionalIngredients: ['butahikiku', 'nagaranege'],
-    excludedIngredients: ['saba', 'satoimo', 'shirataki', 'konnyaku', 'aburaage', 'shijimi']
+    excludedIngredients: ['saba', 'satoimo', 'shirataki', 'konnyaku', 'aburaage', 'shijimi'],
+    minIngredients: 2,
+    fixedIngredients: ['nasu'],
+    requiredCategory: {
+      label: 'ひき肉類',
+      ingredientIds: ['torihikiku', 'butahikiku']
+    }
   }
 ];
 
@@ -200,19 +256,19 @@ export const QUIZ_QUESTIONS: Record<string, QuizQuestion> = {
       {
         text: '鮮やかな赤紅色で肉にツヤがあり、トレイの底に赤い汁が一切溜まっていないパック。',
         imageDesc: '全体が美しい鮮紅色で、パックの底が完全に乾いている牛肉スライス。',
-        imagePath: '/image_beef_sinnsenn.jpg',
+        imagePath: '/image_cow_sinnsenn.png',
         isCorrect: true
       },
       {
         text: '全体的に赤みはあるが、トレイの底に少し薄赤い水分（ドリップ）が溜まっているパック。',
         imageDesc: 'トレイの隅に赤い水分がにじみ出ている, ややくすんだ赤色の牛肉。',
-        imagePath: '/image_beef_medium.jpg',
+        imagePath: '/image_cow_not_sinnsenn.png',
         isCorrect: false
       },
       {
         text: '重なり合った部分が茶褐色や黒ずんで見え、表面が乾燥した牛肉。',
         imageDesc: '重なり合った部分が茶褐色や黒ずんで見え、表面が乾燥した牛肉。',
-        imagePath: '/image_beef_not_sinnsenn.jpg',
+        imagePath: '/image_cow_Black.png',
         isCorrect: false
       }
     ],
@@ -487,16 +543,19 @@ export const QUIZ_QUESTIONS: Record<string, QuizQuestion> = {
       {
         text: '外皮が乾燥してツヤのある茶褐色で、頭部（首元）がキュッと硬く締まっていて、全体にずっしり重いもの。',
         imageDesc: '表面の皮がパリパリに乾いて光沢があり、上の芽が出る部分が細く固く閉じている玉ねぎ。',
+        imagePath: '/image_onion_sinnsenn.png',
         isCorrect: true
       },
       {
         text: '頭部を軽く押すと少し柔らかさを感じ、少し甘酸っぱいにおいが漂っているもの。',
         imageDesc: '首のまわりが少し緩んでおり、中心部が少し沈み込んでいる玉ねぎ。',
+        imagePath: '/image_onion_not_sinnsenn.png',
         isCorrect: false
       },
       {
-        text: 'お尻の部分から白い根が長く伸びており、頭部からうっすらと緑色の芽が見えているもの。',
-        imageDesc: '下部から根がフサフサと伸び、上部から新しい芽がツンと飛び出している玉ねぎ。',
+        text: 'お尻の部分から白い根が長く伸びており、表面に黒い斑点や傷みが見られるもの。',
+        imageDesc: '表面の皮に黒い斑点（黒カビ等）がつき、下部から根が伸びている玉ねぎ。',
+        imagePath: '/image_onion_pointBlack.png',
         isCorrect: false
       }
     ],

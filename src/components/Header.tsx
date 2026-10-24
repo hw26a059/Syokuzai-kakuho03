@@ -1,9 +1,9 @@
 import React from 'react';
-import { ChefHat, BookOpen, Trophy, User } from 'lucide-react';
+import { ChefHat, BookOpen, Utensils, User } from 'lucide-react';
 
 interface HeaderProps {
-  currentTab: 'game' | 'book' | 'ranking';
-  setTab: (tab: 'game' | 'book' | 'ranking') => void;
+  currentTab: 'game' | 'recipes' | 'encyclopedia';
+  setTab: (tab: 'game' | 'recipes' | 'encyclopedia') => void;
   nickname: string;
   totalScore: number;
   onResetNickname: () => void;
@@ -25,8 +25,8 @@ export default function Header({
             <ChefHat size={22} className="animate-pulse" />
           </div>
           <div>
-            <span className="font-semibold text-stone-800 tracking-tight block">食材目利きクイズ</span>
-            <span className="text-xs text-stone-400 block -mt-1">鮮度と旬を学び、最高の料理を作ろう</span>
+            <span className="font-semibold text-stone-800 tracking-tight block">食材目利きゲーム</span>
+            <span className="text-xs text-stone-400 block -mt-1">鮮度と旬を学び、料理を作ろう</span>
           </div>
         </div>
 
@@ -35,9 +35,9 @@ export default function Header({
           <button
             id="nav-game"
             onClick={() => setTab('game')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all cursor-pointer ${
               currentTab === 'game'
-                ? 'bg-white text-emerald-600 shadow-xs'
+                ? 'bg-white text-emerald-600 shadow-xs font-bold'
                 : 'text-stone-500 hover:text-stone-800'
             }`}
           >
@@ -45,39 +45,39 @@ export default function Header({
             <span>目利き＆調理</span>
           </button>
           <button
-            id="nav-book"
-            onClick={() => setTab('book')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-              currentTab === 'book'
-                ? 'bg-white text-emerald-600 shadow-xs'
+            id="nav-recipes"
+            onClick={() => setTab('recipes')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all cursor-pointer ${
+              currentTab === 'recipes'
+                ? 'bg-white text-emerald-600 shadow-xs font-bold'
+                : 'text-stone-500 hover:text-stone-800'
+            }`}
+          >
+            <Utensils size={16} />
+            <span>調理レシピ</span>
+          </button>
+          <button
+            id="nav-encyclopedia"
+            onClick={() => setTab('encyclopedia')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all cursor-pointer ${
+              currentTab === 'encyclopedia'
+                ? 'bg-white text-emerald-600 shadow-xs font-bold'
                 : 'text-stone-500 hover:text-stone-800'
             }`}
           >
             <BookOpen size={16} />
-            <span>料理図鑑</span>
-          </button>
-          <button
-            id="nav-ranking"
-            onClick={() => setTab('ranking')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-              currentTab === 'ranking'
-                ? 'bg-white text-emerald-600 shadow-xs'
-                : 'text-stone-500 hover:text-stone-800'
-            }`}
-          >
-            <Trophy size={16} />
-            <span>ランキング</span>
+            <span>食材図鑑</span>
           </button>
         </nav>
 
-        {/* Right Side: User Profile */}
+        {/* Right Side: User Profile & Total Score */}
         <div className="flex items-center gap-3">
           <div className="text-right">
             <div className="flex items-center justify-end gap-1 text-xs text-stone-500">
               <User size={12} />
               <button 
                 onClick={onResetNickname} 
-                className="hover:underline font-medium text-stone-600 max-w-[100px] truncate"
+                className="hover:underline font-medium text-stone-600 max-w-[100px] truncate cursor-pointer"
                 title="ニックネームを変更"
               >
                 {nickname}

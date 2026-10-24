@@ -159,6 +159,8 @@ export default function QuizScreen({ ingredientIds, onQuizComplete, difficulty =
           const showSuccess = isAnswered && option.isCorrect;
           const showFailure = isAnswered && isSelected && !option.isCorrect;
           const isHard = difficulty === 'hard';
+          // じゃがいも・にんじんの簡単モードは「写真のみ」で出題
+          const isPhotoOnly = (currentQuestion.ingredientId === 'jagaimo' || currentQuestion.ingredientId === 'ninjin') && difficulty === 'easy' && Boolean(option.imagePath);
 
           return (
             <button
@@ -166,7 +168,7 @@ export default function QuizScreen({ ingredientIds, onQuizComplete, difficulty =
               id={`quiz-option-${idx}`}
               onClick={() => handleOptionClick(idx)}
               disabled={isAnswered}
-              className={`w-full text-left p-4 rounded-xl border transition-all flex flex-col gap-2 relative ${
+              className={`w-full text-left p-4 rounded-2xl border-2 transition-all flex flex-col gap-2 relative ${
                 isAnswered
                   ? option.isCorrect
                     ? 'border-emerald-500 bg-emerald-50/50'
@@ -178,54 +180,71 @@ export default function QuizScreen({ ingredientIds, onQuizComplete, difficulty =
                   : 'border-stone-200 bg-white hover:border-stone-300 hover:bg-stone-50 cursor-pointer'
               }`}
             >
+              {/* 写真の表示 */}
               {option.imagePath && !isHard && (
-                <div className="w-full h-40 rounded-lg overflow-hidden bg-stone-100 border border-stone-200 mb-2">
+                <div className={`w-full rounded-xl overflow-hidden bg-stone-50 border border-stone-200 ${
+                  isPhotoOnly ? 'h-52 sm:h-60' : 'h-40 mb-2'
+                }`}>
                   <img
                     src={option.imagePath}
-                    alt={option.imageDesc}
+                    alt={isPhotoOnly ? `選択肢 ${idx + 1}` : option.imageDesc}
                     className="w-full h-full object-contain bg-white"
                     referrerPolicy="no-referrer"
                   />
                 </div>
               )}
 
-              {/* Eye-catching badge representing "Observing state" */}
-              {!isHard && option.imageDesc && (
-                <div className="flex items-start gap-3">
-                  <div className={`mt-0.5 p-1 rounded-lg ${showSuccess ? 'bg-emerald-100 text-emerald-600' : showFailure ? 'bg-red-100 text-red-600' : 'bg-stone-100 text-stone-500'}`}>
-                    <Eye size={16} />
-                  </div>
-                  <div>
-                    <div className="text-stone-400 text-xs font-semibold flex items-center gap-1">
-                      <span>パック／トレイの写真（状態）：</span>
+              {/* 写真のみモードのときはテキストを非表示にする */}
+              {isPhotoOnly ? (
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-xs font-bold text-stone-500 bg-stone-100 px-2.5 py-1 rounded-lg">
+                    写真 {idx + 1}
+                  </span>
+                  <span className="text-[11px] text-stone-400">
+                    ※写真をよく見て目利きしてください
+                  </span>
+                </div>
+              ) : (
+                <>
+                  {/* Eye-catching badge representing "Observing state" */}
+                  {!isHard && option.imageDesc && (
+                    <div className="flex items-start gap-3">
+                      <div className={`mt-0.5 p-1 rounded-lg ${showSuccess ? 'bg-emerald-100 text-emerald-600' : showFailure ? 'bg-red-100 text-red-600' : 'bg-stone-100 text-stone-500'}`}>
+                        <Eye size={16} />
+                      </div>
+                      <div>
+                        <div className="text-stone-400 text-xs font-semibold flex items-center gap-1">
+                          <span>パック／トレイの写真（状態）：</span>
+                        </div>
+                        <p className="text-stone-500 text-xs italic font-medium mt-0.5">
+                          「{option.imageDesc}」
+                        </p>
+                      </div>
                     </div>
-                    <p className="text-stone-500 text-xs italic font-medium mt-0.5">
-                      「{option.imageDesc}」
+                  )}
+
+                  <div className={!isHard && option.imageDesc ? 'border-t border-stone-100 pt-2 mt-1' : ''}>
+                    <p className="text-stone-800 font-medium text-sm leading-relaxed">
+                      {option.text}
                     </p>
                   </div>
-                </div>
+                </>
               )}
-
-              <div className={!isHard && option.imageDesc ? 'border-t border-stone-100 pt-2 mt-1' : ''}>
-                <p className="text-stone-800 font-medium text-sm leading-relaxed">
-                  {option.text}
-                </p>
-              </div>
 
               {/* Selection info or correctness marks */}
               {!isAnswered && isTempSelected && (
-                <span className="absolute top-4 right-4 text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full animate-pulse">
+                <span className="absolute top-4 right-4 text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full animate-pulse shadow-xs">
                   選択中（もう一度押して確定）
                 </span>
               )}
 
               {/* Correct/Incorrect Mark */}
               {isAnswered && (
-                <div className="absolute top-4 right-4">
+                <div className="absolute top-4 right-4 bg-white/90 rounded-full p-0.5 shadow-sm">
                   {option.isCorrect ? (
-                    <CheckCircle className="text-emerald-500" size={24} />
+                    <CheckCircle className="text-emerald-500" size={26} />
                   ) : isSelected ? (
-                    <XCircle className="text-red-500" size={24} />
+                    <XCircle className="text-red-500" size={26} />
                   ) : null}
                 </div>
               )}
